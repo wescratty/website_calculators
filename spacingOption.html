@@ -1,0 +1,1072 @@
+<style>
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.layout-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.layout-table th,
+.layout-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.layout-table th {
+    background: #f5f5f5;
+}
+
+.layout-modes {
+    margin: 20px 0;
+}
+
+.layout-modes label {
+    display: block;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.mode-help {
+    margin-top: 20px;
+}
+
+.mode-help details {
+    border: 1px solid #ddd;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+}
+
+.mode-help summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.mode-help p {
+    margin-top: 10px;
+    line-height: 1.5;
+}
+
+.measurement-input {
+    margin-bottom: 20px;
+}
+
+.measurement-input select {
+    margin-right: 6px;
+    margin-top: 6px;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 18px;
+    cursor: pointer;
+}
+
+</style>
+
+
+<div class="layout-modes">
+
+    <h4>Layout Type</h4>
+
+    <label>
+        <input type="radio" name="layoutMode" value="tight" checked>
+        Tight Layout
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="fixed-gap">
+        Fixed Gap Field
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="equal-gap">
+        Equal Gaps Everywhere
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="fixed-field-equal-edges">
+        Fixed Field Gap + Equal Edges
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="centered">
+        Centered Layout / Equal Rips
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="max-fill">
+        Max Fill / Code Layout
+    </label>
+
+</div>
+
+
+<div class="mode-help">
+
+    <details>
+        <summary>
+            Click for more information about layout types...
+        </summary>
+
+
+
+        <details>
+            <summary>Tight Layout</summary>
+
+            <p>
+                No intentional gaps between materials.
+                Any leftover width becomes a ripped
+                piece at one or both edges.
+            </p>
+
+            <p>
+                Common for tongue-and-groove flooring,
+                hardwood flooring, wainscoting, ceiling
+                planks, wall paneling, cabinet fillers,
+                and other tight-fit installations.
+            </p>
+
+            <p>
+                Often used when materials are designed
+                to interlock or visually appear continuous.
+            </p>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| board | board | board | rip |
+            </pre>
+
+            <p>
+                Or centered:
+            </p>
+
+            <pre>
+| rip | board | board | rip |
+            </pre>
+
+        </details>
+
+
+
+        <details>
+            <summary>Fixed Gap Field</summary>
+
+            <p>
+                Uses a fixed spacing between materials,
+                but no intentional spacing at the start
+                or end edges.
+            </p>
+
+            <p>
+                Common for decking, tile layouts,
+                brick courses, pavers, rainscreen siding,
+                fencing, and exterior trim layouts where
+                field spacing must remain consistent.
+            </p>
+
+            <p>
+                Leftover width becomes either:
+            </p>
+
+            <ul>
+                <li>a single rip at one edge</li>
+                <li>split evenly across both edges</li>
+            </ul>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| board | gap | board | gap | board | rip |
+            </pre>
+
+            <p>
+                Or centered:
+            </p>
+
+            <pre>
+| half rip | board | gap | board | half rip |
+            </pre>
+
+        </details>
+
+
+
+        <details>
+            <summary>Equal Gaps Everywhere</summary>
+
+            <p>
+                Creates identical spacing at both ends
+                and throughout the field. Every visible
+                gap is equal.
+            </p>
+
+            <p>
+                Common for balusters, soffit tails,
+                pergola slats, privacy screens,
+                decorative wall slats, fence pickets,
+                wine racks, shelving dividers, and
+                modern architectural layouts where
+                visual symmetry is the priority.
+            </p>
+
+            <p>
+                Typically used when the spacing itself
+                is the visual feature.
+            </p>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| gap | board | gap | board | gap |
+            </pre>
+
+        </details>
+
+
+
+        <details>
+            <summary>Fixed Field Gap + Equal Edges</summary>
+
+            <p>
+                Keeps spacing between materials fixed,
+                while balancing the start and end gaps
+                equally.
+            </p>
+
+            <p>
+                Common for decking, tile layouts,
+                brick patterns, pavers, exterior siding
+                reveals, trim layouts, and architectural
+                panel systems where field spacing must
+                remain exact but edge balance improves
+                appearance.
+            </p>
+
+            <p>
+                Unlike "Equal Gaps Everywhere",
+                only the edge gaps change size.
+                Interior gaps remain fixed.
+            </p>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| edge gap | board | fixed gap | board | edge gap |
+            </pre>
+
+        </details>
+
+
+
+        <details>
+            <summary>Centered Layout / Equal Rips</summary>
+
+            <p>
+                Centers the layout by splitting leftover
+                material evenly across both sides using
+                ripped pieces.
+            </p>
+
+            <p>
+                Common for flooring, tongue-and-groove,
+                wainscoting, ceiling planks, backsplash
+                tile, wall paneling, cabinet layouts,
+                and finish carpentry where avoiding a
+                tiny edge strip improves appearance.
+            </p>
+
+            <p>
+                Often used when symmetry is visually
+                important but maintaining full-width
+                pieces throughout the field is preferred.
+            </p>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| rip | board | board | board | rip |
+            </pre>
+
+        </details>
+
+
+
+        <details>
+            <summary>Max Fill / Code Layout</summary>
+
+            <p>
+                Maximizes the number of materials while
+                keeping spacing below a maximum limit.
+            </p>
+
+            <p>
+                Common for code-compliant balusters,
+                stair guards, fencing, child-safe
+                railings, livestock fencing, cage
+                dividers, and layouts where spacing
+                regulations or safety rules apply.
+            </p>
+
+            <p>
+                Typically prioritizes:
+            </p>
+
+            <ul>
+                <li>maximum quantity</li>
+                <li>smallest safe spacing</li>
+                <li>code compliance</li>
+            </ul>
+
+            <p>
+                Example:
+            </p>
+
+            <pre>
+| small gap | board | small gap | board | small gap |
+            </pre>
+
+        </details>
+
+    </details>
+
+</div>
+
+<div id="calculator"></div>
+
+
+<script>
+
+document
+    .querySelectorAll('input[name="layoutMode"]')
+    .forEach(radio => {
+
+        radio.addEventListener(
+            "change",
+            renderCalculator
+        );
+
+    });
+
+renderCalculator();
+
+
+
+function getImperialSpinners(id) {
+
+    const fractions = [
+        "0",
+        "1/16",
+        "1/8",
+        "3/16",
+        "1/4",
+        "5/16",
+        "3/8",
+        "7/16",
+        "1/2",
+        "9/16",
+        "5/8",
+        "11/16",
+        "3/4",
+        "13/16",
+        "7/8",
+        "15/16"
+    ];
+
+    let feetOptions = "";
+    for (let i = 0; i <= 30; i++) {
+        feetOptions += `
+            <option value="${i}">
+                ${i} ft
+            </option>
+        `;
+    }
+
+    let inchOptions = "";
+    for (let i = 0; i <= 11; i++) {
+        inchOptions += `
+            <option value="${i}">
+                ${i} in
+            </option>
+        `;
+    }
+
+    let fractionOptions = "";
+
+    for (const fraction of fractions) {
+
+        fractionOptions += `
+            <option value="${fraction}">
+                ${fraction}
+            </option>
+        `;
+    }
+
+    return `
+
+        <div class="measurement-input">
+
+            <select id="${id}Feet">
+                ${feetOptions}
+            </select>
+
+            <select id="${id}Inches">
+                ${inchOptions}
+            </select>
+
+            <select id="${id}Fraction">
+                ${fractionOptions}
+            </select>
+
+        </div>
+    `;
+}
+
+
+
+function renderCalculator() {
+
+    const mode =
+        document.querySelector(
+            'input[name="layoutMode"]:checked'
+        ).value;
+
+    const showGapInputs =
+        mode !== "tight";
+
+    document.getElementById("calculator").innerHTML = `
+
+        <h4>Spacing Calculator</h4>
+
+        <p>
+            Quickly calculate spacing for decking,
+            tile, balusters, flooring, and more.
+        </p>
+
+        <label>Material Width</label>
+        ${getImperialSpinners("width")}
+
+        <label>Total Area Width</label>
+        ${getImperialSpinners("area")}
+
+        ${showGapInputs ? `
+
+            <label>Maximum Gap</label>
+            ${getImperialSpinners("maxGap")}
+
+            <label>Minimum Gap</label>
+            ${getImperialSpinners("minGap")}
+
+        ` : ""}
+
+        <button onclick="calculateGap()">
+            Calculate
+        </button>
+
+        <div id="result"></div>
+    `;
+}
+
+
+
+function addImperial(ft, inch, frac) {
+
+    let fracToDec = 0;
+
+    if (frac !== "0") {
+
+        const [n, d] =
+            frac.split("/").map(Number);
+
+        fracToDec = n / d;
+    }
+
+    return (ft * 12) + inch + fracToDec;
+}
+
+
+
+function formatInches(decimalInches) {
+
+    const whole =
+        Math.floor(decimalInches);
+
+    const fraction =
+        decimalInches - whole;
+
+    const denominator = 32;
+
+    let numerator =
+        Math.round(fraction * denominator);
+
+    if (numerator === denominator) {
+
+        return `${whole + 1}"`;
+    }
+
+    function gcd(a, b) {
+
+        return b
+            ? gcd(b, a % b)
+            : a;
+    }
+
+    const divisor =
+        gcd(numerator, denominator);
+
+    const simplifiedNum =
+        numerator / divisor;
+
+    const simplifiedDen =
+        denominator / divisor;
+
+    if (numerator === 0) {
+
+        return `${whole}"`;
+    }
+
+    return `
+        ${whole}
+        ${simplifiedNum}/${simplifiedDen}"
+    `;
+}
+
+
+
+function solveTightLayout({
+    totalWidth,
+    materialWidth
+}) {
+
+    const count =
+        Math.floor(totalWidth / materialWidth);
+
+    const used =
+        count * materialWidth;
+
+    const remainder =
+        totalWidth - used;
+
+    return [{
+        count,
+        remainder,
+        edgeRip: remainder / 2
+    }];
+}
+
+
+
+function solveFixedGapLayout({
+    totalWidth,
+    materialWidth,
+    gap
+}) {
+
+    const results = [];
+
+    for (let count = 1; count < 200; count++) {
+
+        const gapCount = count - 1;
+
+        const used =
+            (count * materialWidth)
+            +
+            (gapCount * gap);
+
+        const remainder =
+            totalWidth - used;
+
+        if (remainder < 0) {
+            break;
+        }
+
+        results.push({
+            count,
+            gap,
+            edgeRip: remainder,
+            splitEdgeRip: remainder / 2
+        });
+    }
+
+    return results;
+}
+
+
+
+function solveEqualGapLayout({
+    totalWidth,
+    materialWidth,
+    minGap,
+    maxGap
+}) {
+
+    const results = [];
+
+    for (let count = 1; count < 200; count++) {
+
+        const gap =
+            (
+                totalWidth
+                -
+                (count * materialWidth)
+            )
+            /
+            (count + 1);
+
+        if (
+            gap >= minGap
+            &&
+            gap <= maxGap
+        ) {
+
+            results.push({
+                count,
+                gap
+            });
+        }
+    }
+
+    return results;
+}
+
+
+
+function solveFixedFieldEqualEdges({
+    totalWidth,
+    materialWidth,
+    gap
+}) {
+
+    const results = [];
+
+    for (let count = 1; count < 200; count++) {
+
+        const fieldGapCount =
+            count - 1;
+
+        const used =
+            (count * materialWidth)
+            +
+            (fieldGapCount * gap);
+
+        const remainder =
+            totalWidth - used;
+
+        if (remainder < 0) {
+            break;
+        }
+
+        results.push({
+            count,
+            gap,
+            edgeGap: remainder / 2
+        });
+    }
+
+    return results;
+}
+
+
+
+function solveCenteredLayout({
+    totalWidth,
+    materialWidth,
+    gap = 0
+}) {
+
+    const results = [];
+
+    for (let count = 1; count < 200; count++) {
+
+        const gapCount =
+            count - 1;
+
+        const used =
+            (count * materialWidth)
+            +
+            (gapCount * gap);
+
+        const remainder =
+            totalWidth - used;
+
+        if (remainder < 0) {
+            break;
+        }
+
+        results.push({
+            count,
+            gap,
+            leftRip: remainder / 2,
+            rightRip: remainder / 2
+        });
+    }
+
+    return results;
+}
+
+
+
+function solveMaxFillLayout({
+    totalWidth,
+    materialWidth,
+    maxGap
+}) {
+
+    let best = null;
+
+    for (let count = 1; count < 200; count++) {
+
+        const gap =
+            (
+                totalWidth
+                -
+                (count * materialWidth)
+            )
+            /
+            (count + 1);
+
+        if (gap < 0) {
+            break;
+        }
+
+        if (gap <= maxGap) {
+
+            best = {
+                count,
+                gap
+            };
+        }
+    }
+
+    return best
+        ? [best]
+        : [];
+}
+
+
+
+function solveLayout(data) {
+
+    switch (data.mode) {
+
+        case "tight":
+            return solveTightLayout(data);
+
+        case "fixed-gap":
+            return solveFixedGapLayout(data);
+
+        case "equal-gap":
+            return solveEqualGapLayout(data);
+
+        case "fixed-field-equal-edges":
+            return solveFixedFieldEqualEdges(data);
+
+        case "centered":
+            return solveCenteredLayout(data);
+
+        case "max-fill":
+            return solveMaxFillLayout(data);
+
+        default:
+            return [];
+    }
+}
+
+
+
+function getTableConfig(mode) {
+
+    switch (mode) {
+
+        case "tight":
+
+            return {
+
+                headers: `
+                    <th>Option</th>
+                    <th>Boards</th>
+                    <th>Remainder</th>
+                    <th>Edge Rip</th>
+                `,
+
+                buildRow(option, index) {
+
+                    return `
+                        <tr>
+                            <td>Option ${index + 1}</td>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.remainder)}</td>
+                            <td>${formatInches(option.edgeRip)}</td>
+                        </tr>
+                    `;
+                }
+            };
+
+
+
+        case "fixed-gap":
+
+            return {
+
+                headers: `
+                    <th>Option</th>
+                    <th>Boards</th>
+                    <th>Gap</th>
+                    <th>Single Rip</th>
+                    <th>Split Rip</th>
+                `,
+
+                buildRow(option, index) {
+
+                    return `
+                        <tr>
+                            <td>Option ${index + 1}</td>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.gap)}</td>
+                            <td>${formatInches(option.edgeRip)}</td>
+                            <td>${formatInches(option.splitEdgeRip)}</td>
+                        </tr>
+                    `;
+                }
+            };
+
+
+
+        case "equal-gap":
+
+            return {
+
+                headers: `
+                    <th>Option</th>
+                    <th>Balusters</th>
+                    <th>Equal Gap</th>
+                `,
+
+                buildRow(option, index) {
+
+                    return `
+                        <tr>
+                            <td>Option ${index + 1}</td>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.gap)}</td>
+                        </tr>
+                    `;
+                }
+            };
+
+
+
+        case "fixed-field-equal-edges":
+
+            return {
+
+                headers: `
+                    <th>Option</th>
+                    <th>Boards</th>
+                    <th>Field Gap</th>
+                    <th>Edge Gap</th>
+                `,
+
+                buildRow(option, index) {
+
+                    return `
+                        <tr>
+                            <td>Option ${index + 1}</td>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.gap)}</td>
+                            <td>${formatInches(option.edgeGap)}</td>
+                        </tr>
+                    `;
+                }
+            };
+
+
+
+        case "centered":
+
+            return {
+
+                headers: `
+                    <th>Option</th>
+                    <th>Boards</th>
+                    <th>Gap</th>
+                    <th>Left Rip</th>
+                    <th>Right Rip</th>
+                `,
+
+                buildRow(option, index) {
+
+                    return `
+                        <tr>
+                            <td>Option ${index + 1}</td>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.gap)}</td>
+                            <td>${formatInches(option.leftRip)}</td>
+                            <td>${formatInches(option.rightRip)}</td>
+                        </tr>
+                    `;
+                }
+            };
+
+
+
+        case "max-fill":
+
+            return {
+
+                headers: `
+                    <th>Balusters</th>
+                    <th>Gap</th>
+                `,
+
+                buildRow(option) {
+
+                    return `
+                        <tr>
+                            <td>${option.count}</td>
+                            <td>${formatInches(option.gap)}</td>
+                        </tr>
+                    `;
+                }
+            };
+    }
+}
+
+
+
+function calculateGap() {
+
+    const mode =
+        document.querySelector(
+            'input[name="layoutMode"]:checked'
+        ).value;
+
+
+
+    const materialWidth = addImperial(
+        parseFloat(document.getElementById('widthFeet').value),
+        parseFloat(document.getElementById('widthInches').value),
+        document.getElementById('widthFraction').value
+    );
+
+
+
+    const totalWidth = addImperial(
+        parseFloat(document.getElementById('areaFeet').value),
+        parseFloat(document.getElementById('areaInches').value),
+        document.getElementById('areaFraction').value
+    );
+
+
+
+    let minGap = 0;
+    let maxGap = 0;
+
+    if (mode !== "tight") {
+
+        maxGap = addImperial(
+            parseFloat(document.getElementById('maxGapFeet').value),
+            parseFloat(document.getElementById('maxGapInches').value),
+            document.getElementById('maxGapFraction').value
+        );
+
+        minGap = addImperial(
+            parseFloat(document.getElementById('minGapFeet').value),
+            parseFloat(document.getElementById('minGapInches').value),
+            document.getElementById('minGapFraction').value
+        );
+    }
+
+
+
+    const data = {
+        mode,
+        totalWidth,
+        materialWidth,
+        minGap,
+        maxGap,
+        gap: maxGap
+    };
+
+
+
+    const results =
+        solveLayout(data);
+
+
+
+    if (!results.length) {
+
+        document.getElementById("result").innerHTML = `
+            No solutions found.
+        `;
+
+        return;
+    }
+
+
+
+    const options = [
+        results[results.length - 1],
+        results[results.length - 2],
+        results[results.length - 3]
+    ].filter(Boolean);
+
+
+
+    const tableConfig =
+        getTableConfig(mode);
+
+
+
+    document.getElementById("result").innerHTML = `
+
+        <div class="table-wrapper">
+
+            <table class="layout-table">
+
+                <thead>
+                    <tr>
+                        ${tableConfig.headers}
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${options
+                        .map((option, index) =>
+                            tableConfig.buildRow(
+                                option,
+                                index
+                            )
+                        )
+                        .join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+}
+
+</script>

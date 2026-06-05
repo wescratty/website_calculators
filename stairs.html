@@ -1,0 +1,1055 @@
+<style>
+
+#stairSvgWrapper {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid #ccc;
+    margin-top: 30px;
+    background: #fafafa;
+}
+
+#stairSvg {
+    min-width: 1200px;
+    min-height: 600px;
+}
+
+.stair-line {
+    fill: none;
+    stroke: black;
+    stroke-width: 2;
+}
+
+.stair-text {
+    font-size: 12px;
+    font-family: Arial;
+}
+
+</style>
+
+
+
+<div id="stairSvgWrapper">
+
+    <svg
+        id="stairSvg"
+        viewBox="0 0 1400 700"
+    ></svg>
+
+</div>
+
+
+
+<script>
+
+function renderStairSvg(stair) {
+
+    const svg =
+        document.getElementById("stairSvg");
+
+
+
+    svg.innerHTML = "";
+
+
+
+    const scale = 8;
+
+
+
+    const rise =
+        stair.rise * scale;
+
+    const run =
+        stair.run * scale;
+
+
+
+    const totalHeight =
+        stair.risers * rise;
+
+    const totalWidth =
+        stair.treads * run;
+
+
+
+    const startX = 100;
+
+    const startY = 600;
+
+
+
+    let path = `
+        M ${startX} ${startY}
+    `;
+
+
+
+    for (
+        let i = 0;
+        i < stair.treads;
+        i++
+    ) {
+
+        const x1 =
+            startX + (i * run);
+
+        const y1 =
+            startY - (i * rise);
+
+        const x2 =
+            x1;
+
+        const y2 =
+            y1 - rise;
+
+        const x3 =
+            x2 + run;
+
+        const y3 =
+            y2;
+
+
+
+        path += `
+            L ${x2} ${y2}
+            L ${x3} ${y3}
+        `;
+    }
+
+
+
+    const stairPath =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+        );
+
+
+
+    stairPath.setAttribute("d", path);
+
+    stairPath.setAttribute(
+        "class",
+        "stair-line"
+    );
+
+
+
+    svg.appendChild(stairPath);
+
+
+
+    for (
+        let i = 0;
+        i < stair.treads;
+        i++
+    ) {
+
+        const treadX =
+            startX + (i * run) + (run / 2);
+
+        const treadY =
+            startY - ((i + 1) * rise) - 10;
+
+
+
+        const treadLabel =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
+            );
+
+
+
+        treadLabel.setAttribute(
+            "x",
+            treadX
+        );
+
+        treadLabel.setAttribute(
+            "y",
+            treadY
+        );
+
+        treadLabel.setAttribute(
+            "class",
+            "stair-text"
+        );
+
+
+
+        treadLabel.textContent =
+            `T${i + 1}`;
+
+
+
+        svg.appendChild(treadLabel);
+    }
+
+
+
+    for (
+        let i = 0;
+        i < stair.risers;
+        i++
+    ) {
+
+        const riserX =
+            startX + (i * run) - 30;
+
+        const riserY =
+            startY - (i * rise) - (rise / 2);
+
+
+
+        const riserLabel =
+            document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "text"
+            );
+
+
+
+        riserLabel.setAttribute(
+            "x",
+            riserX
+        );
+
+        riserLabel.setAttribute(
+            "y",
+            riserY
+        );
+
+        riserLabel.setAttribute(
+            "class",
+            "stair-text"
+        );
+
+
+
+        riserLabel.textContent =
+            `R${i + 1}`;
+
+
+
+        svg.appendChild(riserLabel);
+    }
+
+
+
+    const overallRun =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+
+
+    overallRun.setAttribute(
+        "x",
+        startX + (totalWidth / 2)
+    );
+
+    overallRun.setAttribute(
+        "y",
+        startY + 40
+    );
+
+    overallRun.setAttribute(
+        "class",
+        "stair-text"
+    );
+
+
+
+    overallRun.textContent =
+        `Total Run: ${formatInches(stair.totalRun)}`;
+
+
+
+    svg.appendChild(overallRun);
+
+
+
+    const overallRise =
+        document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+        );
+
+
+
+    overallRise.setAttribute(
+        "x",
+        startX - 80
+    );
+
+    overallRise.setAttribute(
+        "y",
+        startY - (totalHeight / 2)
+    );
+
+    overallRise.setAttribute(
+        "class",
+        "stair-text"
+    );
+
+
+
+    overallRise.textContent =
+        `Total Rise: ${formatInches(
+            stair.rise * stair.risers
+        )}`;
+
+
+
+    svg.appendChild(overallRise);
+}
+
+
+
+</script>
+<style>
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-bottom: 40px;
+}
+
+.layout-table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.layout-table th,
+.layout-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.layout-table th {
+    background: #f5f5f5;
+}
+
+.measurement-input {
+    margin-bottom: 20px;
+}
+
+.measurement-input select {
+    margin-right: 6px;
+    margin-top: 6px;
+}
+
+.layout-section {
+    margin-top: 40px;
+}
+
+.layout-section pre {
+    background: #f5f5f5;
+    padding: 10px;
+    overflow-x: auto;
+}
+
+.checkbox-row {
+    margin: 20px 0;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 18px;
+    cursor: pointer;
+}
+
+.result-empty {
+    padding: 14px;
+    border: 1px solid #ddd;
+    margin-top: 12px;
+}
+
+</style>
+
+
+
+<div id="stairCalculator">
+
+    <h2>Stair Calculator</h2>
+
+    <p>
+        Calculates stair layouts, rise/run,
+        stringer length, stair angle,
+        and total required stair run.
+    </p>
+
+
+
+    <label>
+        Bottom Finish Floor Thickness
+    </label>
+
+    <div id="bottomFinishInputs"></div>
+
+
+
+    <label>
+        Top Finish Floor Thickness
+    </label>
+
+    <div id="topFinishInputs"></div>
+
+
+
+    <label>
+        Tread Stock Thickness
+    </label>
+
+    <div id="treadThicknessInputs"></div>
+
+
+
+    <label>
+        Subfloor Height Difference
+    </label>
+
+    <div id="totalRiseInputs"></div>
+
+
+
+    <div class="checkbox-row">
+
+        <label>
+
+            <input
+                type="checkbox"
+                id="limitRunCheckbox"
+            >
+
+            Limit Total Horizontal Run
+
+        </label>
+
+    </div>
+
+
+
+    <div id="runConstraintContainer"
+         style="display:none;">
+
+        <label>
+            Maximum Horizontal Run
+        </label>
+
+        <div id="totalRunInputs"></div>
+
+    </div>
+
+
+
+    <label>
+        Minimum Rise
+    </label>
+
+    <div id="minRiseInputs"></div>
+
+
+
+    <label>
+        Maximum Rise
+    </label>
+
+    <div id="maxRiseInputs"></div>
+
+
+
+    <label>
+        Preferred Tread Depth
+    </label>
+
+    <div id="preferredRunInputs"></div>
+
+
+
+    <label>
+        Tread Tolerance (+/-)
+    </label>
+
+    <div id="runToleranceInputs"></div>
+
+
+
+    <button onclick="calculateStairs()">
+        Calculate Stairs
+    </button>
+
+
+
+    <div id="result"></div>
+
+</div>
+
+
+
+<script>
+
+function getImperialSpinners(id) {
+
+    const fractions = [
+        "0",
+        "1/16",
+        "1/8",
+        "3/16",
+        "1/4",
+        "5/16",
+        "3/8",
+        "7/16",
+        "1/2",
+        "9/16",
+        "5/8",
+        "11/16",
+        "3/4",
+        "13/16",
+        "7/8",
+        "15/16"
+    ];
+
+    let feetOptions = "";
+
+    for (let i = 0; i <= 30; i++) {
+
+        feetOptions += `
+            <option value="${i}">
+                ${i} ft
+            </option>
+        `;
+    }
+
+    let inchOptions = "";
+
+    for (let i = 0; i <= 11; i++) {
+
+        inchOptions += `
+            <option value="${i}">
+                ${i} in
+            </option>
+        `;
+    }
+
+    let fractionOptions = "";
+
+    for (const fraction of fractions) {
+
+        fractionOptions += `
+            <option value="${fraction}">
+                ${fraction}
+            </option>
+        `;
+    }
+
+    return `
+
+        <div class="measurement-input">
+
+            <select id="${id}Feet">
+                ${feetOptions}
+            </select>
+
+            <select id="${id}Inches">
+                ${inchOptions}
+            </select>
+
+            <select id="${id}Fraction">
+                ${fractionOptions}
+            </select>
+
+        </div>
+    `;
+}
+
+
+
+[
+    "bottomFinish",
+    "topFinish",
+    "treadThickness",
+    "totalRise",
+    "totalRun",
+    "minRise",
+    "maxRise",
+    "preferredRun",
+    "runTolerance"
+].forEach(id => {
+
+    const target =
+        document.getElementById(
+            `${id}Inputs`
+        );
+
+    if (target) {
+
+        target.innerHTML =
+            getImperialSpinners(id);
+    }
+});
+
+
+
+document
+    .getElementById("limitRunCheckbox")
+    .addEventListener(
+        "change",
+        function () {
+
+            document
+                .getElementById(
+                    "runConstraintContainer"
+                )
+                .style.display =
+                    this.checked
+                        ? "block"
+                        : "none";
+        }
+    );
+
+
+
+function addImperial(ft, inch, frac) {
+
+    let fracToDec = 0;
+
+    if (frac !== "0") {
+
+        const [n, d] =
+            frac.split("/").map(Number);
+
+        fracToDec = n / d;
+    }
+
+    return (ft * 12) + inch + fracToDec;
+}
+
+
+
+function formatInches(decimalInches) {
+
+    const whole =
+        Math.floor(decimalInches);
+
+    const fraction =
+        decimalInches - whole;
+
+    const denominator = 32;
+
+    let numerator =
+        Math.round(fraction * denominator);
+
+    if (numerator === denominator) {
+
+        return `${whole + 1}"`;
+    }
+
+    function gcd(a, b) {
+
+        return b
+            ? gcd(b, a % b)
+            : a;
+    }
+
+    const divisor =
+        gcd(numerator, denominator);
+
+    const simplifiedNum =
+        numerator / divisor;
+
+    const simplifiedDen =
+        denominator / divisor;
+
+    if (numerator === 0) {
+
+        return `${whole}"`;
+    }
+
+    return `
+        ${whole}
+        ${simplifiedNum}/${simplifiedDen}"
+    `;
+}
+
+
+
+function solveStairs({
+
+    totalRise,
+    preferredRun,
+    runTolerance,
+    minRise,
+    maxRise,
+    maxTotalRun,
+    limitTotalRun
+
+}) {
+
+    const results = [];
+
+
+
+    const minRun =
+        preferredRun - runTolerance;
+
+    const maxRun =
+        preferredRun + runTolerance;
+
+
+
+    for (
+        let risers = 2;
+        risers <= 25;
+        risers++
+    ) {
+
+        const rise =
+            totalRise / risers;
+
+
+
+        if (
+            rise < minRise
+            ||
+            rise > maxRise
+        ) {
+            continue;
+        }
+
+
+
+        const treads =
+            risers - 1;
+
+
+
+        for (
+            let run = minRun;
+            run <= maxRun;
+            run += 1/32
+        ) {
+
+            const totalRun =
+                treads * run;
+
+
+
+            if (
+                limitTotalRun
+                &&
+                totalRun > maxTotalRun
+            ) {
+                continue;
+            }
+
+
+
+            const stringerLength =
+                Math.sqrt(
+                    (totalRise * totalRise)
+                    +
+                    (totalRun * totalRun)
+                );
+
+
+
+            const stairAngle =
+                Math.atan(
+                    totalRise / totalRun
+                ) * (180 / Math.PI);
+
+
+
+            results.push({
+
+                risers,
+                treads,
+                rise,
+                run,
+                totalRun,
+                stringerLength,
+                stairAngle
+
+            });
+        }
+    }
+
+
+
+    results.sort((a, b) => {
+
+        return (
+            Math.abs(a.run - preferredRun)
+            -
+            Math.abs(b.run - preferredRun)
+        );
+    });
+
+
+
+    return results.slice(0, 8);
+}
+
+
+
+function renderTable(results) {
+
+    if (!results.length) {
+
+        return `
+            <div class="result-empty">
+                No valid stair layouts found.
+            </div>
+        `;
+    }
+
+
+
+    return `
+
+        <div class="table-wrapper">
+
+            <table class="layout-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Option</th>
+
+                        <th>Risers</th>
+
+                        <th>Treads</th>
+
+                        <th>Rise</th>
+
+                        <th>Tread Depth</th>
+
+                        <th>Total Run</th>
+
+                        <th>Stringer Length</th>
+
+                        <th>Angle</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    ${results.map((option, index) => `
+
+                        <tr onclick='renderStairSvg(${JSON.stringify(option)})'
+    style="cursor:pointer;">
+
+                            <td>
+                                Option ${index + 1}
+                            </td>
+
+                            <td>
+                                ${option.risers}
+                            </td>
+
+                            <td>
+                                ${option.treads}
+                            </td>
+
+                            <td>
+                                ${formatInches(option.rise)}
+                            </td>
+
+                            <td>
+                                ${formatInches(option.run)}
+                            </td>
+
+                            <td>
+                                ${formatInches(option.totalRun)}
+                            </td>
+
+                            <td>
+                                ${formatInches(option.stringerLength)}
+                            </td>
+
+                            <td>
+                                ${option.stairAngle.toFixed(1)}°
+                            </td>
+
+                        </tr>
+
+                    `).join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+}
+
+
+
+function calculateStairs() {
+
+
+
+    const bottomFinish =
+        addImperial(
+            parseFloat(document.getElementById('bottomFinishFeet').value),
+            parseFloat(document.getElementById('bottomFinishInches').value),
+            document.getElementById('bottomFinishFraction').value
+        );
+
+
+
+    const topFinish =
+        addImperial(
+            parseFloat(document.getElementById('topFinishFeet').value),
+            parseFloat(document.getElementById('topFinishInches').value),
+            document.getElementById('topFinishFraction').value
+        );
+
+
+
+    const treadThickness =
+        addImperial(
+            parseFloat(document.getElementById('treadThicknessFeet').value),
+            parseFloat(document.getElementById('treadThicknessInches').value),
+            document.getElementById('treadThicknessFraction').value
+        );
+
+
+
+    const subfloorRise =
+        addImperial(
+            parseFloat(document.getElementById('totalRiseFeet').value),
+            parseFloat(document.getElementById('totalRiseInches').value),
+            document.getElementById('totalRiseFraction').value
+        );
+
+
+
+    const preferredRun =
+        addImperial(
+            parseFloat(document.getElementById('preferredRunFeet').value),
+            parseFloat(document.getElementById('preferredRunInches').value),
+            document.getElementById('preferredRunFraction').value
+        );
+
+
+
+    const runTolerance =
+        addImperial(
+            parseFloat(document.getElementById('runToleranceFeet').value),
+            parseFloat(document.getElementById('runToleranceInches').value),
+            document.getElementById('runToleranceFraction').value
+        );
+
+
+
+    const minRise =
+        addImperial(
+            parseFloat(document.getElementById('minRiseFeet').value),
+            parseFloat(document.getElementById('minRiseInches').value),
+            document.getElementById('minRiseFraction').value
+        );
+
+
+
+    const maxRise =
+        addImperial(
+            parseFloat(document.getElementById('maxRiseFeet').value),
+            parseFloat(document.getElementById('maxRiseInches').value),
+            document.getElementById('maxRiseFraction').value
+        );
+
+
+
+    const limitTotalRun =
+        document.getElementById(
+            "limitRunCheckbox"
+        ).checked;
+
+
+
+    let maxTotalRun = Infinity;
+
+
+
+    if (limitTotalRun) {
+
+        maxTotalRun =
+            addImperial(
+                parseFloat(document.getElementById('totalRunFeet').value),
+                parseFloat(document.getElementById('totalRunInches').value),
+                document.getElementById('totalRunFraction').value
+            );
+    }
+
+
+
+    const totalRise =
+        subfloorRise
+        +
+        topFinish
+        -
+        bottomFinish
+        +
+        treadThickness;
+
+
+
+    const results =
+        solveStairs({
+
+            totalRise,
+            preferredRun,
+            runTolerance,
+            minRise,
+            maxRise,
+            maxTotalRun,
+            limitTotalRun
+
+        });
+
+
+
+    document.getElementById("result").innerHTML = `
+
+        <div class="layout-section">
+
+            <h3>
+                Stair Layout Options
+            </h3>
+
+            <p>
+
+                Calculates rise, tread depth,
+                total required stair run,
+                stringer length, and stair angle.
+
+            </p>
+
+<pre>
+
+        ______
+       |      |
+_______|      |
+|             |
+|_____________|
+
+</pre>
+
+            ${renderTable(results)}
+
+        </div>
+    `;
+}
+
+</script>

@@ -1,0 +1,173 @@
+<div class="Hip-Valley-Sheet-Angle-calculator">
+<H4>Hip/Valley Sheet Angle</H4>
+  <p>
+    Quickly calculate hip and valley roof sheeting angles from roof pitch (e.g. 4/12, 8/12). Designed for roof framing, sheet cutting, and construction planning.
+  </p>
+  <p>
+  <label>Plane 1 slope</label>
+  <input type="number" id="p1" min="1" step="1">/12 pitch
+</p>
+  <p>
+  <label>Plane 2 slope</label>
+    <b></b>
+  <input type="number" id="p2" min="1" step="1">/12 pitch
+</p>
+  
+  <button onclick="calculateAngle()">
+    Calculate
+  </button>
+
+  <h3 id="result"></h3>
+
+</div>
+<canvas id="sheetCanvas1" width="500" height="300"></canvas>
+<canvas id="sheetCanvas2" width="500" height="300"></canvas>
+
+<script>
+  function formatInches(decimalInches) {
+
+  const whole = Math.floor(decimalInches);
+
+  const fraction = decimalInches - whole;
+
+  const denominator = 16;
+
+  let numerator = Math.round(fraction * denominator);
+
+  // handle rollover
+  if (numerator === denominator) {
+    return `${whole + 1}"`;
+  }
+
+  // simplify fraction
+  function gcd(a, b) {
+    return b ? gcd(b, a % b) : a;
+  }
+
+  const divisor = gcd(numerator, denominator);
+
+  const simplifiedNum = numerator / divisor;
+  const simplifiedDen = denominator / divisor;
+
+  if (numerator === 0) {
+    return `${whole}"`;
+  }
+
+  return `${whole} ${simplifiedNum}/${simplifiedDen}"`;
+};
+  
+function drawSheet(canvasId, angleDeg, dist) {
+
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
+
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // scale (pixels per inch)
+  const scale = 4;
+
+  const sheetW = 96 * scale; // 8 ft
+  const sheetH = 48 * scale; // 4 ft
+
+  const offset = (48 / Math.tan(angleDeg * Math.PI / 180)); // inches
+  const cutX = offset * scale;
+
+  // origin (top-left margin)
+  const ox = 40;
+  const oy = 30;
+
+  // draw sheet
+  ctx.strokeStyle = "#000";
+  ctx.strokeRect(ox, oy, sheetW, sheetH);
+
+  // draw diagonal cut line
+  ctx.strokeStyle = "red";
+  ctx.beginPath();
+  ctx.moveTo(ox, oy + sheetH);                 // bottom-left
+  ctx.lineTo(ox + cutX, oy);                   // top edge point
+  ctx.stroke();
+
+  // label
+  ctx.fillStyle = "black";
+  ctx.font = "12px Arial";
+ctx.fillText(`4x8 Sheet, pull from corner ${dist} in.`, ox, oy - 5);
+  ctx.fillText("Cut Line", ox + cutX + 5, oy + 20);
+}
+</script>
+<script>
+function getDistFromCorner(angleDeg) {
+  const rise = 48; // 4 ft in inches
+  const theta = angleDeg * Math.PI / 180;
+
+  return rise / Math.tan(theta);
+};
+  
+function calculateAngle() {
+  const p1 = parseFloat(document.getElementById('p1').value)/12 || 0;
+  const p2 = parseFloat(document.getElementById('p2').value)/12 || 0;
+  console.log("p1:", p1);
+console.log("p2:", p2);
+  if (!p1 || p1 <= 0) {
+    document.getElementById('result').innerHTML =
+      "Plane 1 slope must be greater than 0";
+    return;
+  }
+    if (!p2 || p2 <= 0) {
+    document.getElementById('result').innerHTML =
+      "Plane 2 slope must be greater than 0";
+    return;
+  }
+
+// valley angle on plane 1
+const a1 = Math.acos(
+    (p2 * (1 + p1 * p1)) /
+    (
+        Math.sqrt(1 + p1 * p1) *
+        Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
+    )
+);
+
+// valley angle on plane 2
+const a2 = Math.acos(
+    (p1 * (1 + p2 * p2)) /
+    (
+        Math.sqrt(1 + p2 * p2) *
+        Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
+    )
+);
+  console.log("a1:", a1);
+
+console.log("a2:", a2);
+// convert radians to degrees
+const d1 = a1 * 180 / Math.PI;
+const d2 = a2 * 180 / Math.PI;
+console.log("d1:", d1);
+console.log("d2:", d2);
+// complementary "inside valley" angles
+const valley1 = 90 - d1;
+const valley2 = 90 - d2;
+
+const v1Dist = getDistFromCorner(valley1);
+const v2Dist = getDistFromCorner(valley2);
+ console.log("Plane 1 valley angle:", valley1);
+console.log("Plane 2 valley angle:", valley2);
+  console.log("v1Dist:", v1Dist);
+console.log("v2Dist:", v2Dist);
+  const v1Inch = formatInches(v1Dist);
+  const v2Inch = formatInches(v2Dist);
+
+ document.getElementById('result').innerHTML = `
+  Plane 1 valley angle: ${valley1.toFixed(2)}°<br>
+  Pull from corner (Plane 1): ${v1Inch} inches<br><br>
+
+  Plane 2 valley angle: ${valley2.toFixed(2)}°<br>
+  Pull from corner (Plane 2): ${v2Inch} inches
+`;
+
+drawSheet("sheetCanvas1", valley1, v1Inch);
+drawSheet("sheetCanvas2", valley2, v2Inch);
+ 
+};
+  
+</script>

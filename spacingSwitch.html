@@ -1,0 +1,912 @@
+<style>
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .layout-table {
+        width: 100%;
+        min-width: 700px;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .layout-table th,
+    .layout-table td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .layout-table th {
+        background: #f5f5f5;
+    }
+
+
+    .layout-modes {
+        margin: 20px 0;
+    }
+
+    .layout-modes label {
+        display: block;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+
+    .mode-help {
+        margin-top: 20px;
+    }
+
+    .mode-help details {
+        border: 1px solid #ddd;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+    }
+
+    .mode-help summary {
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .mode-help p {
+        margin-top: 10px;
+        line-height: 1.5;
+    }
+</style>
+
+
+<div class="layout-modes">
+
+    <h4>Layout Type</h4>
+
+    <label>
+        <input type="radio" name="layoutMode" value="tight" checked>
+        Tight Layout
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="fixed-gap">
+        Fixed Gap Field
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="equal-gap">
+        Equal Gaps Everywhere
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="fixed-field-equal-edges">
+        Fixed Field Gap + Equal Edges
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="centered">
+        Centered Layout / Equal Rips
+    </label>
+
+    <label>
+        <input type="radio" name="layoutMode" value="max-fill">
+        Max Fill / Code Layout
+    </label>
+
+</div>
+
+
+<div class="mode-help">
+    <details>
+        <summary>Click for more information about Types...</summary>
+        <details>
+            <summary>Tight Layout</summary>
+            <p>
+                No intentional gaps. Used for flooring,
+                tongue-and-groove, wainscoting, and paneling.
+                Any leftover space becomes ripped edge pieces.
+            </p>
+        </details>
+
+        <details>
+            <summary>Fixed Gap Field</summary>
+            <p>
+                Uses a constant gap between materials,
+                but no gap at the ends. Common for decking,
+                brick, tile, and siding layouts.
+            </p>
+        </details>
+
+        <details>
+            <summary>Equal Gaps Everywhere</summary>
+            <p>
+                Creates identical spacing at both ends
+                and throughout the field. Common for balusters,
+                soffit tails, slat walls, and decorative spacing.
+            </p>
+        </details>
+
+        <details>
+            <summary>Fixed Field Gap + Equal Edges</summary>
+            <p>
+                Keeps field spacing fixed while balancing
+                the edges symmetrically. Useful for certain
+                railing systems and architectural layouts.
+            </p>
+        </details>
+
+        <details>
+            <summary>Centered Layout / Equal Rips</summary>
+            <p>
+                Prioritizes visual symmetry by centering
+                the layout and splitting remainder evenly
+                across both edges.
+            </p>
+        </details>
+
+        <details>
+            <summary>Max Fill / Code Layout</summary>
+            <p>
+                Maximizes material quantity while staying
+                under a spacing limit. Common for code-compliant
+                balusters and fencing.
+            </p>
+        </details>
+    </details>
+</div>
+
+
+<div id="calculator"></div>
+<script>
+    document
+        .querySelectorAll('input[name="layoutMode"]')
+        .forEach(radio => {
+
+            radio.addEventListener(
+                "change",
+                renderCalculator
+            );
+
+        });
+    renderCalculator();
+
+    function getImperialSpinners(id) {
+        const fractions = [
+            "0",
+            "1/16",
+            "1/8",
+            "3/16",
+            "1/4",
+            "5/16",
+            "3/8",
+            "7/16",
+            "1/2",
+            "9/16",
+            "5/8",
+            "11/16",
+            "3/4",
+            "13/16",
+            "7/8",
+            "15/16"
+        ];
+
+        // Feet options
+        let feetOptions = "";
+        for (let i = 0; i <= 30; i++) {
+            feetOptions += `<option value="${i}">${i} ft</option>`;
+        }
+
+        // Inch options
+        let inchOptions = "";
+        for (let i = 0; i <= 11; i++) {
+            inchOptions += `<option value="${i}">${i} in</option>`;
+        }
+
+        // Fraction options
+        let fractionOptions = "";
+        for (const fraction of fractions) {
+            fractionOptions += `
+      <option value="${fraction}">
+        ${fraction}
+      </option>
+    `;
+        }
+
+        return `
+    <div class="measurement-input">
+
+      <select id="${id}Feet">
+        ${feetOptions}
+      </select>
+
+      <select id="${id}Inches">
+        ${inchOptions}
+      </select>
+
+      <select id="${id}Fraction">
+        ${fractionOptions}
+      </select>
+
+    </div>
+  `;
+    }
+
+    function renderCalculator() {
+
+        const mode =
+            document.querySelector(
+                'input[name="layoutMode"]:checked'
+            ).value;
+
+        const calculator =
+            document.getElementById("calculator");
+
+        const showGapInputs =
+            mode !== "tight";
+
+        calculator.innerHTML = `
+
+    <h4>Spacing Calculator</h4>
+
+    <p>
+      Quickly calculate spacing of deck boards,
+      tile, balusters, or t-n-g!
+    </p>
+
+    <p>
+      Note: Only calculates to the 32nd so
+      long runs may accumulate rounding errors.
+    </p>
+
+    <label>Average Material Width</label>
+    ${getImperialSpinners("width")}
+
+    <label>Total Coverage Area</label>
+    ${getImperialSpinners("area")}
+
+    ${showGapInputs
+                ? `
+        <label>Max Gap</label>
+        ${getImperialSpinners("maxGap")}
+
+        <label>Min Gap</label>
+        ${getImperialSpinners("minGap")}
+      `
+                : ""
+            }
+
+    <button onclick="calculateGap()">
+      Calculate
+    </button>
+
+    <h3 id="result"></h3>
+  `;
+    }
+
+
+    function formatInches(decimalInches) {
+
+        const whole = Math.floor(decimalInches);
+
+        const fraction = decimalInches - whole;
+
+        const denominator = 32;
+
+        let numerator = Math.round(fraction * denominator);
+
+        // handle rollover
+        if (numerator === denominator) {
+            return `${whole + 1}"`;
+        }
+
+        // simplify fraction
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        const divisor = gcd(numerator, denominator);
+
+        const simplifiedNum = numerator / divisor;
+        const simplifiedDen = denominator / divisor;
+
+        if (numerator === 0) {
+            return `${whole}"`;
+        }
+
+        return `${whole} ${simplifiedNum}/${simplifiedDen}"`;
+    };
+
+    function addImperial(ft, inch, frac) {
+        let fracToDec = 0;
+        if (frac !== "0") {
+            const [numerator, denominator] =
+                frac.split("/").map(Number);
+            fracToDec = numerator / denominator;
+        }
+
+        console.log("ft, inch, frac, fracToDec", ft, inch, frac, fracToDec);
+        return (ft * 12) + inch + fracToDec;
+    }
+
+    function solveTightLayout({
+        totalWidth,
+        materialWidth
+    }) {
+
+        const results = [];
+
+        const count =
+            Math.floor(totalWidth / materialWidth);
+
+        const used =
+            count * materialWidth;
+
+        const remainder =
+            totalWidth - used;
+
+        results.push({
+            count,
+            used,
+            remainder,
+            edgeRip: remainder / 2
+        });
+
+        return results;
+    }
+
+    function solveEqualGapLayout({
+        totalWidth,
+        materialWidth,
+        minGap,
+        maxGap
+    }) {
+
+        const results = [];
+
+        for (let count = 1; count < 100; count++) {
+
+            const gap =
+                (totalWidth - (count * materialWidth))
+                / (count + 1);
+
+            if (gap >= minGap && gap <= maxGap) {
+
+                results.push({
+                    count,
+                    gap
+                });
+            }
+        }
+
+        return results;
+    }
+
+    function solveFixedGapLayout({
+        totalWidth,
+        materialWidth,
+        gap
+    }) {
+
+        const results = [];
+
+        for (let count = 1; count < 200; count++) {
+
+            // gaps only BETWEEN materials
+            const gapCount = count - 1;
+
+            const used =
+                (count * materialWidth)
+                +
+                (gapCount * gap);
+
+            const remainder =
+                totalWidth - used;
+
+            if (remainder < 0) {
+                break;
+            }
+
+            results.push({
+                count,
+                gap,
+                used,
+                remainder,
+                edgeRip: remainder,
+                splitEdgeRip: remainder / 2
+            });
+        }
+
+        return results;
+    }
+
+    function solveFixedFieldEqualEdges({
+        totalWidth,
+        materialWidth,
+        gap
+    }) {
+
+        const results = [];
+
+        for (let count = 1; count < 200; count++) {
+
+            // field gaps only
+            const fieldGapCount = count - 1;
+
+            const fieldWidth =
+                (count * materialWidth)
+                +
+                (fieldGapCount * gap);
+
+            const remainder =
+                totalWidth - fieldWidth;
+
+            if (remainder < 0) {
+                break;
+            }
+
+            const edgeGap = remainder / 2;
+
+            results.push({
+                count,
+                gap,
+                edgeGap,
+                used: fieldWidth,
+                remainder
+            });
+        }
+
+        return results;
+    }
+
+    function solveCenteredLayout({
+        totalWidth,
+        materialWidth,
+        gap = 0
+    }) {
+
+        const results = [];
+
+        for (let count = 1; count < 200; count++) {
+
+            const gapCount = count - 1;
+
+            const used =
+                (count * materialWidth)
+                +
+                (gapCount * gap);
+
+            const remainder =
+                totalWidth - used;
+
+            if (remainder < 0) {
+                break;
+            }
+
+            const edgeRip = remainder / 2;
+
+            results.push({
+                count,
+                gap,
+                used,
+                remainder,
+                leftRip: edgeRip,
+                rightRip: edgeRip
+            });
+        }
+
+        return results;
+    }
+
+    function solveMaxFillLayout({
+        totalWidth,
+        materialWidth,
+        maxGap
+    }) {
+
+        let best = null;
+
+        for (let count = 1; count < 200; count++) {
+
+            // equal gaps everywhere
+            const gapCount = count + 1;
+
+            const gap =
+                (totalWidth - (count * materialWidth))
+                / gapCount;
+
+            // impossible
+            if (gap < 0) {
+                break;
+            }
+
+            // valid code spacing
+            if (gap <= maxGap) {
+
+                best = {
+                    count,
+                    gap,
+                    used:
+                        (count * materialWidth)
+                        +
+                        (gapCount * gap)
+                };
+            }
+        }
+
+        return best;
+    }
+
+    function solveLayout(data) {
+
+        switch (data.mode) {
+
+            case "tight":
+                return solveTightLayout(data);
+
+            case "fixed-gap":
+                return solveFixedGapLayout(data);
+
+            case "equal-gap":
+                return solveEqualGapLayout(data);
+
+            case "fixed-field-equal-edges":
+                return solveFixedFieldEqualEdges(data);
+
+            case "centered":
+                return solveCenteredLayout(data);
+
+            case "max-fill":
+                return solveMaxFillLayout(data);
+
+            default:
+                return null;
+        }
+    }
+    
+    function calculateGap() {
+        const widthFeet = parseFloat(document.getElementById('widthFeet').value);
+        const widthInches = parseFloat(document.getElementById('widthInches').value);
+        const widthFraction = document.getElementById('widthFraction').value;
+        const materialWidth = addImperial(widthFeet, widthInches, widthFraction);
+
+        const areaFeet = parseFloat(document.getElementById('areaFeet').value);
+        const areaInches = parseFloat(document.getElementById('areaInches').value);
+        const areaFraction = document.getElementById('areaFraction').value;
+        const totalWidth = addImperial(areaFeet, areaInches, areaFraction);
+
+        const maxGapFeet = parseFloat(document.getElementById('maxGapFeet').value);
+        const maxGapInches = parseFloat(document.getElementById('maxGapInches').value);
+        const maxGapFraction = document.getElementById('maxGapFraction').value;
+        const maxGap = addImperial(maxGapFeet, maxGapInches, maxGapFraction);
+
+        const minGapFeet = parseFloat(document.getElementById('minGapFeet').value);
+        const minGapInches = parseFloat(document.getElementById('minGapInches').value);
+        const minGapFraction = document.getElementById('minGapFraction').value;
+        const minGap = addImperial(minGapFeet, minGapInches, minGapFraction);
+
+        const edgeGaps = !(minGap === 0 && maxGap === 0);
+        const data = {
+            totalWidth,
+            materialWidth,
+            minGap,
+            maxGap,
+            edgeGaps,
+        };
+        const results = solveLayout(data);
+
+        if (!results.length) {
+
+            document.getElementById("result").innerHTML = `
+    No solutions found.<br>
+    Try allowing a larger gap range.
+  `;
+
+            return;
+        }
+
+        // Tightest spacing
+        const option1 = results[results.length - 1];
+
+        // Slightly fewer boards
+        const option2 = results[results.length - 2];
+
+        // Another fallback
+        //const option3 = results[results.length - 3];
+
+        const options = [
+            option1,
+            option2,
+            //option3
+        ].filter(Boolean);
+
+        function buildRow(option, index) {
+
+            const gap = option.gap;
+
+            // Equal edge margins
+            const edgeSpace =
+                (option.remainder / 2) + gap;
+
+            // Optional ripped start/end boards
+            const rippedBoard =
+                (option.remainder + gap - materialWidth) / 2;
+
+            if (gap === 0) {
+                return `
+    <tr>
+      <td>Option ${index + 1}</td>
+
+      <td>${option.count}</td>
+
+      <td>${formatInches(gap)}</td>
+
+      <td>${formatInches(option.remainder)}</td>
+
+      <td>${formatInches(edgeSpace)}</td>
+
+      <td>-</td>
+
+    </tr>
+  `;
+            }
+            else {
+                return `
+    <tr>
+      <td>Option ${index + 1}</td>
+
+      <td>${option.count + 1}</td>
+
+      <td>${formatInches(gap)}</td>
+
+      <td>${formatInches(option.remainder)}</td>
+
+      <td>-</td>
+
+      <td>${formatInches(rippedBoard)}</td>
+
+    </tr>
+  `;
+            }
+
+
+        }
+
+        document.getElementById("result").innerHTML = `
+ <div class="table-wrapper">
+  <table class="layout-table">
+
+    <thead>
+      <tr>
+        <th>Layout</th>
+        <th>Boards</th>
+        <th>Gap</th>
+        <th>Remainder</th>
+        <th>Start & End Rip</th>
+        <th>Start & End Gap</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      ${options.map(buildRow).join("")}
+    </tbody>
+
+  </table>
+  </div>
+`;
+    };
+
+
+function getTableConfig() {
+const mode =
+            document.querySelector(
+                'input[name="layoutMode"]:checked'
+            ).value;
+
+  switch (mode) {
+
+    case "tight":
+
+      return {
+        headers: `
+          <th>Option</th>
+          <th>Boards</th>
+          <th>Remainder</th>
+          <th>Edge Rip</th>
+        `,
+
+        buildRow(option, index) {
+
+          return `
+            <tr>
+              <td>Option ${index + 1}</td>
+
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.remainder)}</td>
+
+              <td>
+                ${formatInches(option.edgeRip)}
+              </td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    case "fixed-gap":
+
+      return {
+        headers: `
+          <th>Option</th>
+          <th>Boards</th>
+          <th>Gap</th>
+          <th>Single Rip</th>
+          <th>Split Rip</th>
+        `,
+
+        buildRow(option, index) {
+
+          return `
+            <tr>
+              <td>Option ${index + 1}</td>
+
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.gap)}</td>
+
+              <td>
+                ${formatInches(option.edgeRip)}
+              </td>
+
+              <td>
+                ${formatInches(option.splitEdgeRip)}
+              </td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    case "equal-gap":
+
+      return {
+        headers: `
+          <th>Option</th>
+          <th>Balusters</th>
+          <th>Equal Gap</th>
+        `,
+
+        buildRow(option, index) {
+
+          return `
+            <tr>
+              <td>Option ${index + 1}</td>
+
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.gap)}</td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    case "fixed-field-equal-edges":
+
+      return {
+        headers: `
+          <th>Option</th>
+          <th>Boards</th>
+          <th>Field Gap</th>
+          <th>Edge Gap</th>
+        `,
+
+        buildRow(option, index) {
+
+          return `
+            <tr>
+              <td>Option ${index + 1}</td>
+
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.gap)}</td>
+
+              <td>
+                ${formatInches(option.edgeGap)}
+              </td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    case "centered":
+
+      return {
+        headers: `
+          <th>Option</th>
+          <th>Boards</th>
+          <th>Gap</th>
+          <th>Left Rip</th>
+          <th>Right Rip</th>
+        `,
+
+        buildRow(option, index) {
+
+          return `
+            <tr>
+              <td>Option ${index + 1}</td>
+
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.gap)}</td>
+
+              <td>
+                ${formatInches(option.leftRip)}
+              </td>
+
+              <td>
+                ${formatInches(option.rightRip)}
+              </td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    case "max-fill":
+
+      return {
+        headers: `
+          <th>Balusters</th>
+          <th>Gap</th>
+        `,
+
+        buildRow(option) {
+
+          return `
+            <tr>
+              <td>${option.count}</td>
+
+              <td>${formatInches(option.gap)}</td>
+            </tr>
+          `;
+        }
+      };
+
+
+
+    default:
+      return null;
+  }
+};
+
+const tableConfig = getTableConfig();
+
+document.getElementById("result").innerHTML = `
+
+  <div class="table-wrapper">
+
+    <table class="layout-table">
+
+      <thead>
+        <tr>
+          ${tableConfig.headers}
+        </tr>
+      </thead>
+
+      <tbody>
+        ${options
+          .map(tableConfig.buildRow)
+          .join("")}
+      </tbody>
+
+    </table>
+
+  </div>
+`;
+
+</script>
