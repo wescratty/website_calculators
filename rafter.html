@@ -71,7 +71,25 @@ button {
 
 </style>
 
+<!--
+  Rafter Calculator
+  ==================
+  Computes common-rafter framing dimensions for a gable roof from
+  building width, ridge thickness, pitch, and wall/soffit measurements.
 
+  Terms used below:
+    run          - horizontal distance from wall centerline to ridge
+                   (half the building width, minus half the ridge board).
+    rise         - vertical climb over that run, from the pitch.
+    common rafter - the rafter from the ridge to the outside wall, found
+                   with the Pythagorean theorem from run/rise.
+    tail         - the rafter's overhang past the wall, covering the soffit.
+    birdsmouth   - the notch cut into the rafter where it sits on the wall
+                   plate; its seat depth equals the wall thickness.
+    heel height  - the remaining rafter depth above the birdsmouth cut,
+                   which determines how much of the fascia is visible.
+    plumb cut    - the vertical cut angle at the ridge end of the rafter.
+-->
 
 <div id="rafterCalculator">
 
@@ -189,6 +207,9 @@ button {
 
 <script>
 
+// Builds a feet / inches / sixteenths trio of <select> spinners and
+// returns them as an HTML string, keyed off the given id prefix
+// (e.g. "buildingWidth" -> #buildingWidthFeet, #buildingWidthInches, ...).
 function getImperialSpinners(id) {
 
     const fractions = [
@@ -282,6 +303,8 @@ function getImperialSpinners(id) {
 
 
 
+// Converts a feet / inches / fraction spinner trio into one
+// decimal-inches number, e.g. (1, 3, "1/2") -> 15.5.
 function addImperial(ft, inch, frac) {
 
     let fracToDec = 0;
@@ -299,6 +322,9 @@ function addImperial(ft, inch, frac) {
 
 
 
+// Converts decimal inches back into a "whole fraction/32ths" display
+// string, e.g. 15.5 -> `15 1/2"`. Rounds to the nearest 1/32" and
+// reduces the fraction (e.g. 16/32 -> 1/2) via gcd.
 function formatInches(decimalInches) {
 
     const whole =
@@ -416,16 +442,21 @@ function calculateRafters() {
 
 
 
+    // Horizontal run from the wall's centerline to the ridge: half the
+    // building width, minus half the ridge board (the ridge splits the run
+    // between the two roof planes).
     const run =
         (buildingWidth - ridgeThickness) / 2;
 
 
 
+    // Vertical rise over that run, from the pitch (rise per 12" of run).
     const rise =
         (run / 12) * pitch;
 
 
 
+    // Roof angle, from the pitch triangle: atan(rise/run) == atan(pitch/12).
     const roofAngle =
         Math.atan(
             pitch / 12
@@ -433,6 +464,7 @@ function calculateRafters() {
 
 
 
+    // Common rafter length: hypotenuse of the run/rise triangle.
     const commonLength =
         Math.sqrt(
             (run * run)
@@ -442,6 +474,8 @@ function calculateRafters() {
 
 
 
+    // The tail is its own smaller run/rise triangle, scaled to the
+    // soffit's horizontal projection instead of the full building run.
     const overhangRun =
         soffit;
 
@@ -460,16 +494,22 @@ function calculateRafters() {
 
 
 
+    // Stock length needed to cut one rafter: ridge to tail tip.
     const totalLength =
         commonLength + tailLength;
 
 
 
+    // The birdsmouth notch sits the rafter down onto the wall plate, so
+    // its seat depth just needs to match the wall thickness.
     const birdsmouthSeat =
         wallThickness;
 
 
 
+    // Rafter depth remaining above the birdsmouth cut. The plate drops the
+    // rafter by (wall thickness projected up the slope); what's left of
+    // the framing lumber above that cut is the visible heel/fascia depth.
     const heelHeight =
         rafterDepth
         -
@@ -481,6 +521,8 @@ function calculateRafters() {
 
 
 
+    // One extra pair covers the end of the building past the last
+    // full on-center spacing interval.
     const rafterPairs =
         Math.ceil(
             buildingLength / ocSpacing
@@ -493,6 +535,8 @@ function calculateRafters() {
 
 
 
+    // The cut at the ridge end is plumb (vertical), so it's the
+    // complement of the roof angle from horizontal.
     const plumbCut =
         90 - roofAngle;
 
@@ -605,6 +649,10 @@ function calculateRafters() {
 
 
 
+// Draws a simple side-profile diagram of one rafter: wall, tail, common
+// rafter line up to the ridge, and dimension labels. All lengths are
+// scaled by `scale` (pixels per inch) and drawn from a fixed origin
+// (startX, startY) representing the outside of the wall plate.
 function renderRafterSvg(data) {
 
     const svg =

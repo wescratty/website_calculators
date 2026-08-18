@@ -1,3 +1,11 @@
+<!--
+  Hip/Valley Sheet Angle Calculator
+  ====================================
+  Given the pitches of the two roof planes meeting at a hip or valley,
+  finds the angle each plane's sheathing needs to be cut at along that
+  line, plus where to strike that cut line from the corner of a 4x8
+  sheet so it can be marked and cut without a protractor.
+-->
 <div class="Hip-Valley-Sheet-Angle-calculator">
 <H4>Hip/Valley Sheet Angle</H4>
   <p>
@@ -9,10 +17,9 @@
 </p>
   <p>
   <label>Plane 2 slope</label>
-    <b></b>
   <input type="number" id="p2" min="1" step="1">/12 pitch
 </p>
-  
+
   <button onclick="calculateAngle()">
     Calculate
   </button>
@@ -24,6 +31,9 @@
 <canvas id="sheetCanvas2" width="500" height="300"></canvas>
 
 <script>
+  // Converts decimal inches back into a "whole fraction/16ths" display
+  // string, e.g. 15.5 -> `15 1/2"`. Rounds to the nearest 1/16" and
+  // reduces the fraction (e.g. 8/16 -> 1/2) via gcd.
   function formatInches(decimalInches) {
 
   const whole = Math.floor(decimalInches);
@@ -56,6 +66,9 @@
   return `${whole} ${simplifiedNum}/${simplifiedDen}"`;
 };
   
+// Draws a 4x8 sheet with a diagonal cut line at the given angle, struck
+// from the bottom-left corner, so it can be marked out on a real sheet
+// without a protractor - just measure `dist` up from that corner.
 function drawSheet(canvasId, angleDeg, dist) {
 
   const canvas = document.getElementById(canvasId);
@@ -96,68 +109,71 @@ ctx.fillText(`4x8 Sheet, pull from corner ${dist} in.`, ox, oy - 5);
 }
 </script>
 <script>
+// For a given cut angle, finds how far up a 4ft sheet edge to strike
+// the cut line so it lands at that angle from the corner:
+// rise / tan(angle) = the horizontal pull-back distance.
 function getDistFromCorner(angleDeg) {
   const rise = 48; // 4 ft in inches
   const theta = angleDeg * Math.PI / 180;
 
   return rise / Math.tan(theta);
 };
-  
+
+// Computes the sheathing cut angle on each side of a hip/valley from
+// the two meeting roof pitches (p1, p2, expressed as rise/12).
+//
+// This is a standard hip/valley "dihedral angle" formula: it treats
+// each roof plane as tilted by atan(pitch) from horizontal, finds the
+// angle between the valley line and each plane's eave line, and takes
+// the complement (90 - angle) to get the angle actually measured off
+// the sheet's square edge when marking a cut.
 function calculateAngle() {
   const p1 = parseFloat(document.getElementById('p1').value)/12 || 0;
   const p2 = parseFloat(document.getElementById('p2').value)/12 || 0;
-  console.log("p1:", p1);
-console.log("p2:", p2);
+
   if (!p1 || p1 <= 0) {
     document.getElementById('result').innerHTML =
       "Plane 1 slope must be greater than 0";
     return;
   }
-    if (!p2 || p2 <= 0) {
+  if (!p2 || p2 <= 0) {
     document.getElementById('result').innerHTML =
       "Plane 2 slope must be greater than 0";
     return;
   }
 
-// valley angle on plane 1
-const a1 = Math.acos(
-    (p2 * (1 + p1 * p1)) /
-    (
-        Math.sqrt(1 + p1 * p1) *
-        Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
-    )
-);
+  // Valley/hip angle measured within each plane.
+  const a1 = Math.acos(
+      (p2 * (1 + p1 * p1)) /
+      (
+          Math.sqrt(1 + p1 * p1) *
+          Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
+      )
+  );
 
-// valley angle on plane 2
-const a2 = Math.acos(
-    (p1 * (1 + p2 * p2)) /
-    (
-        Math.sqrt(1 + p2 * p2) *
-        Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
-    )
-);
-  console.log("a1:", a1);
+  const a2 = Math.acos(
+      (p1 * (1 + p2 * p2)) /
+      (
+          Math.sqrt(1 + p2 * p2) *
+          Math.sqrt(p1 * p1 + p2 * p2 + p1 * p1 * p2 * p2)
+      )
+  );
 
-console.log("a2:", a2);
-// convert radians to degrees
-const d1 = a1 * 180 / Math.PI;
-const d2 = a2 * 180 / Math.PI;
-console.log("d1:", d1);
-console.log("d2:", d2);
-// complementary "inside valley" angles
-const valley1 = 90 - d1;
-const valley2 = 90 - d2;
+  const d1 = a1 * 180 / Math.PI;
+  const d2 = a2 * 180 / Math.PI;
 
-const v1Dist = getDistFromCorner(valley1);
-const v2Dist = getDistFromCorner(valley2);
- console.log("Plane 1 valley angle:", valley1);
-console.log("Plane 2 valley angle:", valley2);
-  console.log("v1Dist:", v1Dist);
-console.log("v2Dist:", v2Dist);
+  // Complementary "inside valley" angles: the angle to strike the
+  // cut line at, measured from the sheet's square edge.
+  const valley1 = 90 - d1;
+  const valley2 = 90 - d2;
+
+  const v1Dist = getDistFromCorner(valley1);
+  const v2Dist = getDistFromCorner(valley2);
+
   const v1Inch = formatInches(v1Dist);
   const v2Inch = formatInches(v2Dist);
 
- document.getElementById('result').innerHTML = `
+  document.getElementById('result').innerHTML = `
   Plane 1 valley angle: ${valley1.toFixed(2)}°<br>
   Pull from corner (Plane 1): ${v1Inch} inches<br><br>
 
@@ -165,9 +181,8 @@ console.log("v2Dist:", v2Dist);
   Pull from corner (Plane 2): ${v2Inch} inches
 `;
 
-drawSheet("sheetCanvas1", valley1, v1Inch);
-drawSheet("sheetCanvas2", valley2, v2Inch);
- 
+  drawSheet("sheetCanvas1", valley1, v1Inch);
+  drawSheet("sheetCanvas2", valley2, v2Inch);
 };
   
 </script>

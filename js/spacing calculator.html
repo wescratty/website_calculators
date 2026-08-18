@@ -1,3 +1,24 @@
+<!--
+  Spacing Calculator
+  ===================
+  Works out how to lay a run of equal-width material (deck boards, tile,
+  balusters, siding, etc.) across a fixed width, and reports a handful of
+  common layout strategies:
+
+    1. Tight / Centered   - butt boards together, rip evenly at both ends.
+    2. Fixed Field Gap    - fixed spacing between boards (decking, tile).
+    3. Equal Gaps         - gap between boards, ends, and everywhere else
+                             all come out identical (balusters, slats).
+    4. Equal Gaps, smaller ends - like above but the two end gaps are
+                             allowed to be smaller than the field gap.
+    5. Max Fill / Code    - packs in as many boards as possible while
+                             keeping every gap under a code-max spacing.
+
+  All measurements are entered as feet/inches/sixteenths via the
+  <select> spinners built by getImperialSpinners(), converted to a single
+  decimal-inches number for the math, then formatted back to a fraction
+  (nearest 1/32") for display.
+-->
 <style>
 
 .table-wrapper {
@@ -69,7 +90,6 @@ button {
 </style>
 
 
-
 <div id="calculator">
 
     <h2>Spacing Calculator</h2>
@@ -86,22 +106,17 @@ button {
         small rounding differences.
     </p>
 
-
-
     <label>Material Width</label>
     <div id="widthInputs"></div>
-
 
     <label>Total Area Width</label>
     <span id="gapError"></span>
     <div id="areaInputs"></div>
 
+    <label>Desired Gap</label>
+    <div id="desiredGapInputs"></div>
 
-    <label>Minimum Gap (Optional)</label>
-    <div id="minGapInputs"></div>
-
-
-    <label>Maximum Gap (Optional)</label>
+    <label>Max Gap (+/- tolerance)</label>
     <div id="maxGapInputs"></div>
 
 
@@ -109,16 +124,14 @@ button {
         Calculate Layouts
     </button>
 
-
-
     <div id="result"></div>
 
 </div>
 
-
-
 <script>
 
+// Material width must be smaller than the area it's filling, and neither
+// can be zero, or the layout math below divides by zero / goes negative.
 function validateWidthAndArea() {
 
     const width = addImperial(
@@ -156,12 +169,15 @@ function validateWidthAndArea() {
     return true;
 }
 
+// Keeps the "desired gap" and "max gap" spinners from crossing each
+// other: if the one the user just edited would put desired > max,
+// drag the other one along so desired <= max always holds.
 function syncGapInputs(changed) {
 
-    const minGap = addImperial(
-        parseFloat(document.getElementById('minGapFeet').value),
-        parseFloat(document.getElementById('minGapInches').value),
-        document.getElementById('minGapFraction').value
+    const desiredGap = addImperial(
+        parseFloat(document.getElementById('desiredGapFeet').value),
+        parseFloat(document.getElementById('desiredGapInches').value),
+        document.getElementById('desiredGapFraction').value
     );
 
     const maxGap = addImperial(
@@ -170,41 +186,39 @@ function syncGapInputs(changed) {
         document.getElementById('maxGapFraction').value
     );
 
+    if (desiredGap > maxGap) {
 
-
-    // If min became larger than max
-    if (minGap > maxGap) {
-
-        // Copy min -> max
+        // Desired gap was pushed above max: pull max up to match.
         if (changed === "min") {
 
             document.getElementById('maxGapFeet').value =
-                document.getElementById('minGapFeet').value;
+                document.getElementById('desiredGapFeet').value;
 
             document.getElementById('maxGapInches').value =
-                document.getElementById('minGapInches').value;
+                document.getElementById('desiredGapInches').value;
 
             document.getElementById('maxGapFraction').value =
-                document.getElementById('minGapFraction').value;
+                document.getElementById('desiredGapFraction').value;
         }
 
-
-
-        // Copy max -> min
+        // Max gap was pulled below desired: push desired down to match.
         else {
 
-            document.getElementById('minGapFeet').value =
+            document.getElementById('desiredGapFeet').value =
                 document.getElementById('maxGapFeet').value;
 
-            document.getElementById('minGapInches').value =
+            document.getElementById('desiredGapInches').value =
                 document.getElementById('maxGapInches').value;
 
-            document.getElementById('minGapFraction').value =
+            document.getElementById('desiredGapFraction').value =
                 document.getElementById('maxGapFraction').value;
         }
     }
 }
 
+// Builds a feet / inches / sixteenths trio of <select> spinners and
+// returns them as an HTML string, keyed off the given id prefix
+// (e.g. "width" -> #widthFeet, #widthInches, #widthFraction).
 function getImperialSpinners(id) {
 
     const fractions = [
@@ -279,25 +293,22 @@ function getImperialSpinners(id) {
     `;
 }
 
-
-
 document.getElementById("widthInputs").innerHTML =
     getImperialSpinners("width");
 
 document.getElementById("areaInputs").innerHTML =
     getImperialSpinners("area");
 
-document.getElementById("minGapInputs").innerHTML =
-    getImperialSpinners("minGap");
+document.getElementById("desiredGapInputs").innerHTML =
+    getImperialSpinners("desiredGap");
 
 document.getElementById("maxGapInputs").innerHTML =
     getImperialSpinners("maxGap");
 
-
 [
-    "minGapFeet",
-    "minGapInches",
-    "minGapFraction"
+    "desiredGapFeet",
+    "desiredGapInches",
+    "desiredGapFraction"
 ].forEach(id => {
 
     document
@@ -308,7 +319,6 @@ document.getElementById("maxGapInputs").innerHTML =
         );
 
 });
-
 
 
 [
@@ -326,6 +336,8 @@ document.getElementById("maxGapInputs").innerHTML =
 
 });
 
+// Converts a feet / inches / fraction spinner trio into one
+// decimal-inches number, e.g. (1, 3, "1/2") -> 15.5.
 function addImperial(ft, inch, frac) {
 
     let fracToDec = 0;
@@ -342,7 +354,9 @@ function addImperial(ft, inch, frac) {
 }
 
 
-
+// Converts decimal inches back into a "whole fraction/32ths" display
+// string, e.g. 15.5 -> `15 1/2"`. Rounds to the nearest 1/32" and
+// reduces the fraction (e.g. 16/32 -> 1/2) via gcd.
 function formatInches(decimalInches) {
 
     if (decimalInches < 0) {
@@ -360,6 +374,7 @@ function formatInches(decimalInches) {
     let numerator =
         Math.round(fraction * denominator);
 
+    // Rounding pushed the fraction up to a whole inch (e.g. 31.9/32 -> 32/32).
     if (numerator === denominator) {
 
         return `${whole + 1}"`;
@@ -392,8 +407,14 @@ function formatInches(decimalInches) {
     `;
 }
 
+// Layout Solvers
+// --------------
+// Each solver takes { totalWidth, materialWidth, desiredGap, maxGap } and
+// returns a list of candidate layouts. "totalWidth" is the space being
+// filled, "materialWidth" is the width of one board/tile/etc.
 
-
+// No gaps at all: pack boards edge-to-edge and split whatever doesn't
+// fit evenly as a rip at one or both ends.
 function solveTightLayout({
     totalWidth,
     materialWidth
@@ -417,11 +438,13 @@ function solveTightLayout({
 }
 
 
-
+// Tries every board count and every gap size between desiredGap and
+// maxGap (in 1/32" steps), keeping any combination that fits within
+// totalWidth. Leftover space becomes a rip (or split rip) at the ends.
 function solveFixedGapLayout({
     totalWidth,
     materialWidth,
-    minGap,
+    desiredGap,
     maxGap
 }) {
 
@@ -430,7 +453,7 @@ function solveFixedGapLayout({
     for (let count = 1; count < 200; count++) {
 
         for (
-            let gap = minGap;
+            let gap = desiredGap;
             gap <= maxGap;
             gap += 1/32
         ) {
@@ -464,11 +487,13 @@ function solveFixedGapLayout({
 }
 
 
-
+// Solves for a single gap size (count + 1 gaps: one on each side plus
+// one between every pair of boards) that exactly fills totalWidth with
+// no rips, keeping only results whose gap falls in [desiredGap, maxGap].
 function solveEqualGapLayout({
     totalWidth,
     materialWidth,
-    minGap,
+    desiredGap,
     maxGap
 }) {
 
@@ -486,7 +511,7 @@ function solveEqualGapLayout({
             (count + 1);
 
         if (
-            gap >= minGap
+            gap >= desiredGap
             &&
             gap <= maxGap
         ) {
@@ -502,26 +527,37 @@ function solveEqualGapLayout({
 }
 
 
-function solveEqualGapExceptEndsLayout({totalWidth, materialWidth, minGap, maxGap }) {
+// Same idea as solveEqualGapLayout, but the field gaps are pinned to
+// maxGap and only the two end gaps are solved for - letting the ends
+// come out smaller/tighter than the field spacing.
+function solveEqualGapExceptEndsLayout({
+    totalWidth,
+    materialWidth,
+    desiredGap,
+    maxGap
+}) {
 
     const results = [];
 
     for (let count = 1; count < 200; count++) {
-        //const endGap = (totalWidth - (count * materialWidth) + ((count - 1) * maxGap)) / (count + 1) / 2;
-        let gaps = (count - 1) * maxGap
-        let material = count * materialWidth
-        let covered = (count * materialWidth) + ((count - 1) * maxGap)
-        let left_to_fill = totalWidth - covered
-        let end_gap = left_to_fill / 2
-        let total = (count * materialWidth) + ((count - 1) * maxGap) + 2 * end_gap
-        console.log(`count: ${count}, material: ${material}, gaps: ${gaps}, covered: ${covered}, left_to_fill: ${left_to_fill}, end_gap: ${end_gap}, total: ${total}`)
 
+        const covered =
+            (count * materialWidth)
+            +
+            ((count - 1) * maxGap);
 
-        if (end_gap >= minGap && end_gap <= maxGap && total <= totalWidth) {
-            gap = end_gap   
+        const endGap =
+            (totalWidth - covered) / 2;
+
+        if (
+            endGap >= desiredGap
+            &&
+            endGap <= maxGap
+        ) {
+
             results.push({
                 count,
-                gap
+                gap: endGap
             });
         }
     }
@@ -530,7 +566,9 @@ function solveEqualGapExceptEndsLayout({totalWidth, materialWidth, minGap, maxGa
 }
 
 
-
+// Finds the highest board count whose equal-gap spacing still stays at
+// or under maxGap - i.e. the most material you can fit in without
+// exceeding a code-maximum gap (railings, fencing).
 function solveMaxFillLayout({
     totalWidth,
     materialWidth,
@@ -569,7 +607,8 @@ function solveMaxFillLayout({
 }
 
 
-
+// Renders one titled section (heading, description, ASCII diagram, and
+// a results table or a "no solutions" message) for calculateLayouts().
 function renderTable({
     title,
     description,
@@ -631,11 +670,13 @@ function renderTable({
 }
 
 
-
+// Reads all the inputs, runs each layout solver, and renders every
+// strategy's best few options (closest to maxGap / most boards) into
+// the #result panel.
 function calculateLayouts() {
 
     if (!validateWidthAndArea()) {
-    return;
+        return;
     }
 
     const materialWidth = addImperial(
@@ -644,23 +685,17 @@ function calculateLayouts() {
         document.getElementById('widthFraction').value
     );
 
-
-
     const totalWidth = addImperial(
         parseFloat(document.getElementById('areaFeet').value),
         parseFloat(document.getElementById('areaInches').value),
         document.getElementById('areaFraction').value
     );
 
-
-
-    const minGap = addImperial(
-        parseFloat(document.getElementById('minGapFeet').value),
-        parseFloat(document.getElementById('minGapInches').value),
-        document.getElementById('minGapFraction').value
+    const desiredGap = addImperial(
+        parseFloat(document.getElementById('desiredGapFeet').value),
+        parseFloat(document.getElementById('desiredGapInches').value),
+        document.getElementById('desiredGapFraction').value
     );
-
-
 
     const maxGap = addImperial(
         parseFloat(document.getElementById('maxGapFeet').value),
@@ -668,20 +703,19 @@ function calculateLayouts() {
         document.getElementById('maxGapFraction').value
     );
 
-
-
     const data = {
         totalWidth,
         materialWidth,
-        minGap,
+        desiredGap,
         maxGap
     };
-
-
 
     const tight =
         solveTightLayout(data);
 
+    // Each solver's results are ordered by ascending board count, so the
+    // last few entries are the tightest-fitting / highest-count layouts -
+    // reverse() puts the best option first.
     const fixedGap =
         solveFixedGapLayout(data)
         .slice(-3)
@@ -700,11 +734,7 @@ function calculateLayouts() {
     const maxFill =
         solveMaxFillLayout(data);
 
-
-
     let html = "";
-
-
 
     html += renderTable({
 
@@ -744,8 +774,6 @@ function calculateLayouts() {
         `)
 
     });
-
-
 
     html += renderTable({
 
@@ -793,8 +821,6 @@ function calculateLayouts() {
 
     });
 
-
-
     html += renderTable({
 
         title: "Equal Gaps Everywhere",
@@ -825,8 +851,6 @@ function calculateLayouts() {
         `)
 
     });
-
-
 
     html += renderTable({
 
@@ -859,8 +883,6 @@ function calculateLayouts() {
 
     });
 
-
-
     html += renderTable({
 
         title: "Max Fill / Code Layout",
@@ -892,10 +914,8 @@ function calculateLayouts() {
 
     });
 
-
-
     document.getElementById("result").innerHTML =
         html;
 }
 
-</script> 
+</script>

@@ -1,3 +1,9 @@
+<!--
+  Concrete Calculator
+  =====================
+  Converts a slab's length, width, and thickness into cubic yards of
+  concrete needed. Length/width are entered in feet, thickness in inches.
+-->
 <div class="concrete-calculator">
 <H4>Concrete Calculator</H4>
   <label>Length (feet)</label>
@@ -29,6 +35,9 @@ function calculateConcrete() {
   const thickness =
     parseFloat(document.getElementById('thickness').value) || 0;
 
+  // Volume in cubic feet is length * width * (thickness in feet), and
+  // a cubic yard is 27 cubic feet, so dividing by (12 * 27 = 324)
+  // converts length(ft) * width(ft) * thickness(in) straight to yards.
   const yards =
     (length * width * thickness) / 324;
 

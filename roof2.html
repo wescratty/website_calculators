@@ -70,6 +70,20 @@
   }
 </style>
 
+<!--
+  Rafter Stock-Fit Calculator
+  =============================
+  A simpler companion to rafter.html: given building width, pitch, and
+  soffit overhang, computes the common rafter length and the full
+  "envelope" length (rafter + soffit overhang combined), then checks
+  which standard lumber stock lengths (8'-24') it fits on. Optionally
+  trims the soffit down until the envelope fits a shorter, cheaper
+  stock length.
+
+  Unlike the other calculators here, inputs are plain decimal inputs
+  (feet, not feet/inches/fraction spinners) for a quicker rough estimate.
+-->
+
 <div class="wrap">
 
   <div class="card">
@@ -102,19 +116,26 @@
 </div>
 
 <script>
+// Note: `widthFt` here is treated as the rafter's horizontal run
+// directly (not halved for a ridge like rafter.html does) - this
+// calculator is meant as a quick single-plane rafter/stock estimate.
 function computeGeometry(widthFt, pitch, soffitIn) {
 
   const run = widthFt * 12;
   const rise = (run / 12) * pitch;
 
-  // main rafter (top edge)
+  // main rafter (top edge): hypotenuse of the run/rise triangle
   const common = Math.sqrt(run * run + rise * rise);
 
-  // soffit projection
+  // soffit projection: same triangle relationship, scaled to the
+  // soffit's horizontal overhang instead of the full run
   const soffitRun = soffitIn;
   const soffitRise = (soffitRun / 12) * pitch;
   const soffit = Math.sqrt(soffitRun * soffitRun + soffitRise * soffitRise);
 
+  // envelope: the full board length needed to cut both the common
+  // rafter and its tail from one piece of stock (run+soffit combined,
+  // rather than common + soffit added as separate hypotenuses)
   const envelope = Math.sqrt(
     Math.pow(run + soffitRun, 2) +
     Math.pow(rise + soffitRise, 2)
@@ -123,6 +144,8 @@ function computeGeometry(widthFt, pitch, soffitIn) {
   return { run, rise, common, soffit, envelope };
 }
 
+// Checks the envelope length against standard rafter stock lengths
+// (sold in even feet) and flags which ones are long enough to use.
 function stockOptions(envelope) {
 
   const stock = [8,10,12,14,16,18,20,24];
@@ -142,12 +165,13 @@ function run() {
 
   const geo = computeGeometry(width, pitch, soffit);
 
-  // OPTIONAL OPTIMIZATION (simple version)
+  // Optional: if the envelope doesn't fit the shortest available stock,
+  // shrink the soffit overhang one inch at a time (recomputing geometry
+  // each step) until it does - trading overhang for a cheaper stock length.
   if (optimize) {
     const target = stockOptions(geo.envelope).find(s => s.fits);
 
     if (target) {
-      // crude adjustment: reduce soffit until it just fits
       while (geo.envelope > target.size * 12 && soffit > 0) {
         soffit -= 1;
         Object.assign(geo, computeGeometry(width, pitch, soffit));
@@ -175,6 +199,9 @@ function run() {
   drawSVG(geo);
 }
 
+// Draws a simple ridge-to-tail rafter line with plumb and soffit
+// reference lines, scaled by `scale` (pixels per inch) from a fixed
+// origin at the wall.
 function drawSVG(g) {
 
   const svg = document.getElementById("svg");

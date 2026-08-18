@@ -26,7 +26,23 @@
 
 </style>
 
+<!--
+  Stair Calculator
+  =================
+  Solves for stair layouts (riser count, rise per step, tread depth)
+  that fit a given floor-to-floor height, given rise/run comfort limits
+  and an optional maximum total horizontal run.
 
+  Terms used below:
+    total rise   - vertical distance from the bottom finished floor to
+                   the top finished floor that the stair must climb.
+    riser        - the vertical face of one step; "rise" is its height.
+    tread        - the horizontal surface of one step; "run" is its depth.
+                   A stair with N risers has N-1 treads (the top riser
+                   lands on the upper floor itself).
+    stringer     - the diagonal board the treads/risers are cut into;
+                   its length is the hypotenuse of total rise/run.
+-->
 
 <div id="stairSvgWrapper">
 
@@ -41,6 +57,10 @@
 
 <script>
 
+// Draws a side-profile staircase diagram: one L-shaped path segment per
+// step (up a riser, across a tread), tread/riser labels, and overall
+// run/rise dimension labels. All lengths are scaled by `scale` (pixels
+// per inch) from a fixed bottom-left origin (startX, startY).
 function renderStairSvg(stair) {
 
     const svg =
@@ -616,6 +636,8 @@ document
 
 
 
+// Converts a feet / inches / fraction spinner trio into one
+// decimal-inches number, e.g. (1, 3, "1/2") -> 15.5.
 function addImperial(ft, inch, frac) {
 
     let fracToDec = 0;
@@ -633,6 +655,9 @@ function addImperial(ft, inch, frac) {
 
 
 
+// Converts decimal inches back into a "whole fraction/32ths" display
+// string, e.g. 15.5 -> `15 1/2"`. Rounds to the nearest 1/32" and
+// reduces the fraction (e.g. 16/32 -> 1/2) via gcd.
 function formatInches(decimalInches) {
 
     const whole =
@@ -680,6 +705,13 @@ function formatInches(decimalInches) {
 
 
 
+// Tries every riser count from 2-25; for each, the rise per step is
+// fixed (totalRise / risers), so only counts landing within
+// [minRise, maxRise] are kept. For each surviving riser count, sweeps
+// tread depth across [preferredRun - tolerance, preferredRun + tolerance]
+// in 1/32" steps and keeps every depth that satisfies the optional total
+// horizontal run limit. Results are then sorted so tread depths closest
+// to the preferred run come first, and only the best 8 are returned.
 function solveStairs({
 
     totalRise,
@@ -725,6 +757,8 @@ function solveStairs({
 
 
 
+        // N risers means N-1 treads: the last riser lands on the
+        // upper floor, which doesn't need its own tread.
         const treads =
             risers - 1;
 
@@ -751,6 +785,7 @@ function solveStairs({
 
 
 
+            // Stringer length: hypotenuse of the overall rise/run triangle.
             const stringerLength =
                 Math.sqrt(
                     (totalRise * totalRise)
@@ -783,6 +818,7 @@ function solveStairs({
 
 
 
+    // Prefer tread depths closest to what the user asked for.
     results.sort((a, b) => {
 
         return (
@@ -994,6 +1030,12 @@ function calculateStairs() {
 
 
 
+    // The stair actually climbs from the top of the bottom finished
+    // floor to the top of the upper finished floor, not raw subfloor to
+    // subfloor: add the upper floor's finish thickness (raises the top),
+    // subtract the lower floor's finish thickness (raises the bottom,
+    // shortening the climb), and add tread stock thickness since the
+    // first tread's walking surface sits above the bottom finish floor.
     const totalRise =
         subfloorRise
         +
